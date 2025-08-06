@@ -15,10 +15,26 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
     }
   }
-  User.init({
-    firstName: DataTypes.STRING,
-    lastName: DataTypes.STRING,
-    email: DataTypes.STRING
+  User.define({
+    loginId: {
+      type: DataTypes.INTEGER,
+      field: 'fk_login_id',
+      allowNull: false,
+      references: {
+        model: 'Logins',
+        key: 'id'
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'SET NULL'
+    },
+    firstName: {
+     type: DataTypes.STRING,
+     allowNull: false
+    },
+    lastName: {
+     type: DataTypes.STRING,
+     allowNull: false
+    },
   }, {
     sequelize,
     modelName: 'User',
