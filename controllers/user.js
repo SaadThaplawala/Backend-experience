@@ -1,8 +1,7 @@
 'use strict';
-const User = require('../models/user');
+
 const models = require( '../models/index');
 const bcrypt = require('bcrypt');
-const login = require('../models/login');
 
 // const listAllUsers = async () => {
 //   const users = await models.User.findAll();
@@ -11,7 +10,12 @@ const login = require('../models/login');
 
 const listAllUsers = async (req, res) => {
   try {
-    const users = await models.User.findAll();
+    const users = await models.tests.findAll({
+      include: {
+        model: models.Users,
+        required: true
+      }
+    });
 
     res.status(200).json({
       message: 'Users fetched successfully',
@@ -28,7 +32,6 @@ const listAllUsers = async (req, res) => {
 const createUserWithLogin = async (req, res) => {
   try {
     const { firstName, lastName, email, password, confirmPassword } = req.body;
-    let newUser;
     if (!firstName || !lastName || !email || !password || !confirmPassword) {
       return res.status(400).json({ message: 'All fields are required.' });
     }
@@ -46,7 +49,7 @@ const createUserWithLogin = async (req, res) => {
     // });
     // }
 
-    const userexists = await models.Login.findOne({where: { email }});
+    const userexists = await models.Logins.findOne({where: { email }});
     if (userexists){
       return res.status(400).json({message: 'User with this email already exists.'});
     }
@@ -57,15 +60,19 @@ const createUserWithLogin = async (req, res) => {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    const newLogin =  await models.Login.create({
+    const newLogin =  await models.Logins.create({
         email,
         password: hashedPassword,
       });
-      newUser = await models.User.create({
+    console.log("Login", newLogin);
+
+     const newUser = await models.Users.create({
         firstName,
         lastName,
-        loginId: newLogin.id,
+        loginId: newLogin.dataValues.id,
       });
+
+      console.log("User", newUser);
 
     res.status(201).json({
       message: 'User created successfully',
