@@ -3,9 +3,9 @@
 const models = require( '../models/index');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-const dotenv = require('dotenv');
+// const dotenv = require('dotenv');
 
-dotenv.config();
+// dotenv.config();
 
 
 const login = async (req, res, next) => {
@@ -25,7 +25,7 @@ const login = async (req, res, next) => {
         const confirmPassword = await bcrypt.compare(password, user.password);
 
         if (confirmPassword) {
-            const token = jwt.sign({userId: user.id}, process.env.TOKEN_SECRET, { expiresIn: '12h' });
+            const token = jwt.sign({ email: user.email }, process.env.TOKEN_SECRET, { expiresIn: '12h' });
 
             delete user.dataValues.password;
 

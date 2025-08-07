@@ -16,7 +16,11 @@ module.exports = (sequelize, DataTypes) => {
     timestamps: true
   });
 
-  Logins.associate = function(models) {}
+  Logins.associate = function(models) {
+    models.Logins.hasOne(models.Users, {
+      foreignKey: 'loginId',
+    });
+  }
 
   return Logins;
 };

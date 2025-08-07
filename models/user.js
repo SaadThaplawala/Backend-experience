@@ -25,5 +25,13 @@ module.exports = (sequelize, DataTypes) => {
     freezeTableName: true,
     timeStamp: true
   });
+
+  User.associate = function(models) {
+    models.Users.belongsTo(models.Logins, {
+      foreignKey: 'loginId',
+    })
+  }
+  
+
   return User;
 };

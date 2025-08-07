@@ -23,6 +23,58 @@ const listAllUsers = async (req, res) => {
   }
 };
 
+const getUserByEmail =async (req,res) =>{
+  try{
+    const {email} = req.body;
+    
+    if (!email){
+      return res.status(400).json("Email required.");
+    }
+    const user = await models.Users.findOne({
+        include: [{
+            model: models.Logins,
+            where: {
+              email: email
+            }
+        }]
+    });
+
+    if ( user.dataValues.Login.dataValues.email !== email ) {
+      return res.status(401).json("Incorrect email");
+    }
+
+    return res.status(200).json({
+      status: 'Success',
+      data: {
+        user
+      }
+    });
+    }  catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(500).json({ message: 'Server error during fetching users.' });
+    }
+}
+
+const getUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const userExists = await models.Users.findOne({ where: { id: userId } });
+
+    if (userExists){
+      res.status(201).json({
+      message: 'User found!',
+      user: userExists,
+      })
+    }else{
+      return res.status(400).json({message: `User doesn't exist`});
+    }
+    }catch (error) {
+    console.error('Error creating user:', error);
+    res.status(500).json({ message: 'Server error during user creation.' });
+  }
+};
+    
+
 
 
 const createUserWithLogin = async (req, res) => {
@@ -86,4 +138,4 @@ const createUserWithLogin = async (req, res) => {
   }
 };
 
-module.exports = { listAllUsers, createUserWithLogin };
+module.exports = { listAllUsers, createUserWithLogin, getUser, getUserByEmail };
