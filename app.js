@@ -3,10 +3,12 @@ const sequelize = require('./config/sequelize.js');
 const app = express();
 
 const userroutes = require('./routes/user.js');
+const loginRoutes = require('./routes/login.js');
 
 app.use(express.json());
 
 app.use('/user', userroutes);
+app.use('/login', loginRoutes);
 
 sequelize.auth
   .then(() => {
