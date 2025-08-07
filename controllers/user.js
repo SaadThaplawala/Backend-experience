@@ -10,11 +10,7 @@ const bcrypt = require('bcrypt');
 
 const listAllUsers = async (req, res) => {
   try {
-    const users = await models.tests.findAll({
-      include: {
-        model: models.Users,
-        required: true
-      }
+    const users = await models.Users.findAll({
     });
 
     res.status(200).json({
