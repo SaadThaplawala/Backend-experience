@@ -1,5 +1,6 @@
 'use strict';
 
+const { Op } = require('sequelize');
 const models = require( '../models/index');
 const bcrypt = require('bcrypt');
 
@@ -10,8 +11,53 @@ const bcrypt = require('bcrypt');
 
 const listAllUsers = async (req, res) => {
   try {
-    const users = await models.Users.findAll({
-    });
+    let { page= 0 , limit = 5, sortBy = models.Users.id, order = 'ASC', search = '' } = req.query;
+    page = parseInt(page);
+    limit = parseInt(limit);
+    
+    order = ['ASC', 'DESC'].includes(order.toUpperCase()) ? order.toUpperCase() : 'ASC';
+
+    const allowedSortFields = {
+      id: models.Users.id,
+      loginId: models.Users.loginId,
+      firstName: models.Users.firstName,
+      lastName: models.Users.lastName,
+      createdAt: models.Users.createdAt,
+      updatedAt: models.Users.updatedAt
+    };
+
+    if (!allowedSortFields.includes(sortBy)) {
+      sortBy = models.Users.id;
+    }
+
+    if ( Number.isNaN(page) || page <0 ){
+      page = 0;
+    }
+    if (Number.isNaN(limit) || limit<0 ){
+      limit = 5;
+    }
+    
+    if (limit > 100) limit = 100;
+
+    
+
+    let whereClause = {};
+    if (search) {
+      search = search.trim();
+        whereClause = {
+            [Op.or]: [
+                { firstName: { [Op.iLike]: `%${search}%` } },
+                { lastName: { [Op.iLike]: `%${search}%` } }
+            ]
+        };
+    }
+ 
+    const users = await models.Users.findAndCountAll({
+      limit: limit,
+      offset: page * limit,
+      order:[[sortBy,order]],
+      where: whereClause
+    })
 
     res.status(200).json({
       message: 'Users fetched successfully',
@@ -80,65 +126,5 @@ const getUser = async (req, res) => {
 
 
 
-const createUserWithLogin = async (req, res) => {
-  try {
-    const { firstName, lastName, email, password, confirmPassword } = req.body;
-    if (!firstName || !lastName || !email || !password || !confirmPassword) {
-      return res.status(400).json({ message: 'All fields are required.' });
-    }
-    // if (!email){
-    // newUser = await models.User.create({
-    //   firstName,
-    //   lastName,
-    //   email: null,
-    // });
-    // } else{
-    // newUser = await models.User.create({
-    //   firstName,
-    //   lastName,
-    //   email,
-    // });
-    // }
 
-    const userexists = await models.Logins.findOne({where: { email }});
-    if (userexists){
-      return res.status(400).json({message: 'User with this email already exists.'});
-    }
-
-    if (password !== confirmPassword) {
-      return res.status(400).json({ message: 'Passwords do not match.' });
-    }
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-    const newLogin =  await models.Logins.create({
-        email,
-        password: hashedPassword,
-      });
-    console.log("Login", newLogin);
-
-     const newUser = await models.Users.create({
-        firstName,
-        lastName,
-        loginId: newLogin.dataValues.id,
-      });
-
-      console.log("User", newUser);
-
-    res.status(201).json({
-      message: 'User created successfully',
-      user: {
-        id: newUser.id,
-        firstName: newUser.firstName,
-        lastName: newUser.lastName,
-        email: newLogin.email,
-        loginId: newUser.loginId,
-      },
-    });
-  } catch (error) {
-    console.error('Error creating user:', error);
-    res.status(500).json({ message: 'Server error during user creation.' });
-  }
-};
-
-module.exports = { listAllUsers, createUserWithLogin, getUser, getUserByEmail };
+module.exports = { listAllUsers, getUser, getUserByEmail };

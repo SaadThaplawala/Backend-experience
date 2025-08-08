@@ -24,9 +24,10 @@ async function authenticateToken(req, res, next) {
         where: { email: dec.email }, include: [{
             model: models.Users,
         }]
-    , raw: true, nest: true} );
+    });
+    console.log('user.id', userExists.User.id );
 
-    if (userExists?.User?.id != userId) {
+    if (userExists.User.id != userId) {
         // console.log('uservals', userExists);
         // console.log('userId', userId);
         // console.log('User.id', userExists?.User?.id);
