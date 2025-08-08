@@ -35,13 +35,16 @@ const getUserByEmail =async (req,res) =>{
             model: models.Logins,
             where: {
               email: email
-            }
+            },
+            attributes: ["id", "email" ]
         }]
     });
 
-    if ( user.dataValues.Login.dataValues.email !== email ) {
+    if ( !user ) {
       return res.status(401).json("Incorrect email");
     }
+
+
 
     return res.status(200).json({
       status: 'Success',

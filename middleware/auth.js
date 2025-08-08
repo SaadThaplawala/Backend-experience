@@ -1,34 +1,40 @@
 const jwt = require('jsonwebtoken');
-
+require('dotenv').config();
+const models = require( '../models/index');
+const { raw } = require('mysql2');
 
 
 
 async function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization']
-    const token = authHeader && authHeader.split(' ')[1]
+    const userId = req.headers.userid;
+    // const token = authHeader && authHeader.split(' ')[1]
+    let dec;
     try {
-        if (!token) {
-            return res.status(401).json({ message: 'Access Denied. Token missing.' });
+        if (!authHeader || !userId) {
+            return res.status(401).json({ message: 'Access Denied.' });
         }
 
-        jwt.verify(token, process.env.TOKEN_SECRET);
+        dec = jwt.verify(authHeader, process.env.TOKEN_SECRET);
     } catch (err) {
         return res.status(403).json({ message: 'Invalid token.' });
     }
-
-    const userExists = await models.Users.findOne({
-        where: { id: userId }, include: [{
-            model: models.Logins,
-            attribute: ['email'],
-            as: 'Login'
+    console.log("decoded token: ",dec);
+    const userExists = await models.Logins.findOne({
+        where: { email: dec.email }, include: [{
+            model: models.Users,
         }]
-    });
+    , raw: true, nest: true} );
 
-    if (userExists && userExists.Login.email === token.email) {
-        req.headers.userId = userExists.dataValues.id;
+    if (userExists?.User?.id != userId) {
+        // console.log('uservals', userExists);
+        // console.log('userId', userId);
+        // console.log('User.id', userExists?.User?.id);
+        return res.status(401).json({ message: 'Access Denied.' });
     };
+
     next();
 
 }
 
-module.exports(authenticateToken);
+module.exports = { authenticateToken };
