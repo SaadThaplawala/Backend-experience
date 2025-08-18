@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const models = require( '../models/index');
-const { raw } = require('mysql2');
+
 
 
 
